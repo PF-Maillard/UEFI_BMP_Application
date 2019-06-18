@@ -19,21 +19,27 @@ typedef struct Bullet_N
 	struct Bullet_N * Next;
 } Bullet;
 
-void AddBullet(Bullet ** A, UINTN x, UINTN y)
+EFI_STATUS AddBullet(IN OUT Bullet ** A, IN UINTN x, IN UINTN y)
 {
 	EFI_STATUS Status;
 	Bullet * New;
 
+	//
+	//Si la liste de Bullet est NULL
+	//
 	if (A == NULL)
-		return;
+		return EFI_UNSUPPORTED;
 
+	//
+	//Si la le noeud est vide on ajout un bullet a la position voulu
+	//
 	if (*A == NULL)
 	{
 		Status = gBS->AllocatePool(EfiBootServicesData, sizeof(Bullet), (VOID **)&New);
 		if (EFI_ERROR(Status))
 		{
 			Print(L"ERROR (AddBullet): Impossible d'allouer de la memoire\n");
-			return;
+			return Status;
 		}
 
 		New->x = x;
@@ -41,95 +47,141 @@ void AddBullet(Bullet ** A, UINTN x, UINTN y)
 		New->Next = NULL;
 
 		*A = New;
-		return;
+		return EFI_SUCCESS;
 	}
-
-	AddBullet(&((*A)->Next), x, y);
+	
+	//
+	//On va au noeud suivant
+	//
+	return AddBullet(&((*A)->Next), x, y);
 }
 
-void ShowBullet(Bullet * BulletListe, EFI_GRAPHICS_OUTPUT_PROTOCOL * GraphicsProtocol)
+EFI_STATUS ShowBullet(IN OUT Bullet * BulletListe, IN EFI_GRAPHICS_OUTPUT_PROTOCOL * GraphicsProtocol)
 {
 	EFI_STATUS Status;
 	EFI_GRAPHICS_OUTPUT_BLT_PIXEL White = { 0xFF, 0xFF, 0xFF, 0 };
 
+	//
+	// Si la liste de Bullet est NULL
+	//
 	if (BulletListe == NULL)
-		return;
+		return EFI_SUCCESS;
 
+	//
+	// Si il y a un bullet on affiche ce dernier
+	//
 	Status = GraphicsProtocol->Blt(GraphicsProtocol, &White, EfiBltVideoFill, 0, 0, BulletListe->x, BulletListe->y, 10, 10, 0);
 	if (EFI_ERROR(Status))
 	{
 		Print(L"ERROR (ShowBullet): Impossible d'utiliser le protocole graphique\n");
-		return;
+		return EFI_UNSUPPORTED;
 	}
 
-	ShowBullet(BulletListe->Next, GraphicsProtocol);
+	
+	//
+	//On va au noeud suivant
+	//
+	return ShowBullet(BulletListe->Next, GraphicsProtocol);
 }
 
-void MoveBullet(Bullet ** A)
+EFI_STATUS MoveBullet(IN OUT Bullet ** A)
 {
-	Bullet * Next = ((*A)->Next);
+	Bullet * Next;
 
+	//
+	// Si la liste est vide il y a une erreure
+	//
+	if (A == NULL)
+		return EFI_UNSUPPORTED;
+	
+	
+	//
+	// Si on arrive a la fin de la liste on quitte
+	//
 	if (*A == NULL)
-		return;
+		return EFI_SUCCESS;
 
-
+	 Next = ((*A)->Next);
+	
+	//
+	// on avance chaque bullet
+	//
 	if (((*A)->y - 5) >= 0)
 		(*A)->y -= 5;
 	else
 		(*A)->y = 0;
 
-	MoveBullet(&Next);
+	//
+	// On se rend au noeud suivant
+	//
+	return MoveBullet(&Next);
 }
 
-void DestroyEndBullet(Bullet ** A, Bullet * Last)
+EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 {
 	Bullet * Next;
 
+	//
+	// Si la liste est vide il y a une erreure
+	//
 	if (A == NULL)
-		return;
-
+		return EFI_UNSUPPORTED;
+	
+	
+	//
+	// Si on arrive a la fin de la liste on quitte
+	//
 	if (*A == NULL)
-		return;
+		return EFI_SUCCESS;
 
 	Next = (*A)->Next;
 
+	
+	//
+	//Si on doit dtruire le Bullet de la liste ca ril sort de l'ecran
+	//
 	if ((*A)->y == 0)
 	{
+
 		if (Last == NULL)
 		{
 			if (Next == NULL)
 			{
+				//
+				// si c'est le seul élément on la chaine egale à NULL
+				//
 				FreePool(*A);
 				*A = NULL;
-				DestroyEndBullet(&Next, Last);
+				return DestroyEndBullet(&Next, Last);
 			}
 			else
 			{ 
+				//
+				// si c'est le premier element, on rend un autre élement
+				//
 				FreePool(*A);
 				*A = Next;
-				DestroyEndBullet(&Next, NULL);
+				return DestroyEndBullet(&Next, NULL);
 			}
 		}
 		else
 		{
+			//
+			// si c'est un element d'une chaine on le lidbère et on rattache la chaine
+			//
 			Last->Next = Next;
 			FreePool(*A);
-			DestroyEndBullet(&Next, Last);
+			return DestroyEndBullet(&Next, Last);
 		}
 	}
 	else
-		DestroyEndBullet(&((*A)->Next), *A);
+		//
+		// On boucle
+		//
+		return DestroyEndBullet(&((*A)->Next), *A);
 }
 
-EFI_STATUS
-ConvertBmpToBlt(
-	IN     VOID      *BmpImage,
-	IN     UINTN     BmpImageSize,
-	IN OUT VOID      **GopBlt,
-	IN OUT UINTN     *GopBltSize,
-	OUT UINTN     *PixelHeight,
-	OUT UINTN     *PixelWidth
-)
+EFI_STATUS ConvertBmpToBlt(IN VOID *BmpImage, IN UINTN BmpImageSize, IN OUT VOID **GopBlt, IN OUT UINTN *GopBltSize, OUT UINTN *PixelHeight, OUT UINTN *PixelWidth)
 {
 
 	UINT8                         *ImageData;
@@ -191,7 +243,6 @@ ConvertBmpToBlt(
 	return EFI_SUCCESS;
 }
 
-
 EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 {
 	EFI_STATUS Status;
@@ -218,7 +269,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	EFI_GUID info_type = EFI_FILE_INFO_ID;
 
 	//
-	//Recuperation of the file 
+	//Recuperation du fichier
 	//
 	Status = gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&SimpleFileSystem);
 	if (EFI_ERROR(Status))
@@ -242,7 +293,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	}
 
 	//
-	//Recuperation of the file information 
+	//Recuperation des informations du fichier
 	//
 	Status = gBS->AllocatePool(AllocateAnyPages, infosize, (VOID **)&fileinfo);
 	if (EFI_ERROR(Status))
@@ -268,7 +319,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	}
 
 	//
-	//Recuperation of the Buffer 
+	//Recuperation du Buffer
 	//
 	Status = ReadMe->Read(ReadMe, &BufferSize, Buffer);
 	if (EFI_ERROR(Status))
@@ -278,7 +329,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	}
 
 	//
-	//End of the file reading 
+	// Fin de la lecture du fichier
 	//
 	Status = ReadMe->Close(ReadMe);
 	if (EFI_ERROR(Status))
@@ -288,7 +339,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	}
 
 	//
-	// Conversion of BMP Format to Blt 
+	// Conversion du BMP
 	//
 	Status = ConvertBmpToBlt(Buffer, BufferSize, &GopBlt, &GopBltSize, &BmpHeight, &BmpWidth);
 	if (EFI_ERROR(Status))
@@ -299,7 +350,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 
 
 	//
-	// Disply our Image 
+	// Recuperation du protcole graphique
 	//
 	Status = gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&GraphicsProtocol);
 	if (EFI_ERROR(Status))
@@ -312,7 +363,9 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	y = 0;
 	do
 	{
-
+		//
+		// Affichage des images
+		//
 		Status = GraphicsProtocol->Blt(GraphicsProtocol, &Black, EfiBltVideoFill, 0, 0, 0, 0, 800, 600, 0);
 		if (EFI_ERROR(Status))
 		{
@@ -329,6 +382,11 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 
 		ShowBullet(BulletListe, GraphicsProtocol);
 
+		
+		//
+		// Creation de 2 evenements soit touche ou timer pour que les bullet puissent avancer sans l'appuis de touche 
+		// (pour améliorer, synchroniser les 2 pour que les balles aille exactement à la même vitesse entre un appui de touche et sans) 
+		//
 		Status = gBS->CreateEvent(EVT_TIMER, 0, NULL, NULL, &TimerEvent);
 		if (EFI_ERROR(Status))
 		{
@@ -354,8 +412,10 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 			Print(L"ERROR (main): Impossible d'attendre un event\n");
 			return Status;
 		}
-
-
+		
+		//
+		// S'il s'agit d'un touche, on fait bouger le vaisseau
+		//
 		if (EventIndex == 0)
 		{ 
 			Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
@@ -389,11 +449,18 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 			}
 		}
 
+				
+	//
+	// on fais avancer les Bullets et on détruit ceux sortant de l'ecran
+	//
 	MoveBullet(&BulletListe);
 	DestroyEndBullet(&BulletListe, NULL);
 
 	} while (Key.UnicodeChar != 'y');
 
+	//
+	// Liberation des elements
+	//
 	gBS->FreePool(fileinfo);
 	gBS->FreePool(Buffer);
 
