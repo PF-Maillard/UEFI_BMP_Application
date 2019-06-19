@@ -31,7 +31,7 @@ EFI_STATUS AddBullet(IN OUT Bullet ** A, IN UINTN x, IN UINTN y)
 		return EFI_UNSUPPORTED;
 
 	//
-	//Si la le noeud est vide on ajout un bullet a la position voulu
+	//Si le noeud est vide, on ajout un bullet a la position voulue
 	//
 	if (*A == NULL)
 	{
@@ -68,7 +68,7 @@ EFI_STATUS ShowBullet(IN OUT Bullet * BulletListe, IN EFI_GRAPHICS_OUTPUT_PROTOC
 		return EFI_SUCCESS;
 
 	//
-	// Si il y a un bullet on affiche ce dernier
+	// S'il y a un bullet, on affiche ce dernier
 	//
 	Status = GraphicsProtocol->Blt(GraphicsProtocol, &White, EfiBltVideoFill, 0, 0, BulletListe->x, BulletListe->y, 10, 10, 0);
 	if (EFI_ERROR(Status))
@@ -79,7 +79,7 @@ EFI_STATUS ShowBullet(IN OUT Bullet * BulletListe, IN EFI_GRAPHICS_OUTPUT_PROTOC
 
 	
 	//
-	//On va au noeud suivant
+	// On va au noeud suivant
 	//
 	return ShowBullet(BulletListe->Next, GraphicsProtocol);
 }
@@ -89,14 +89,14 @@ EFI_STATUS MoveBullet(IN OUT Bullet ** A)
 	Bullet * Next;
 
 	//
-	// Si la liste est vide il y a une erreure
+	// Si la liste est vide, il y a une erreur
 	//
 	if (A == NULL)
 		return EFI_UNSUPPORTED;
 	
 	
 	//
-	// Si on arrive a la fin de la liste on quitte
+	// Si on arrive a la fin de la liste, on quitte
 	//
 	if (*A == NULL)
 		return EFI_SUCCESS;
@@ -104,7 +104,7 @@ EFI_STATUS MoveBullet(IN OUT Bullet ** A)
 	 Next = ((*A)->Next);
 	
 	//
-	// on avance chaque bullet
+	// on avance chaque Bullet
 	//
 	if (((*A)->y - 5) >= 0)
 		(*A)->y -= 5;
@@ -122,14 +122,14 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 	Bullet * Next;
 
 	//
-	// Si la liste est vide il y a une erreure
+	// Si la liste est vide, il y a une erreur
 	//
 	if (A == NULL)
 		return EFI_UNSUPPORTED;
 	
 	
 	//
-	// Si on arrive a la fin de la liste on quitte
+	// Si on arrive a la fin de la liste, on quitte
 	//
 	if (*A == NULL)
 		return EFI_SUCCESS;
@@ -138,7 +138,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 
 	
 	//
-	//Si on doit dtruire le Bullet de la liste ca ril sort de l'ecran
+	//Si on doit détruire le Bullet de la liste car il sort de l'ecran
 	//
 	if ((*A)->y == 0)
 	{
@@ -148,7 +148,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 			if (Next == NULL)
 			{
 				//
-				// si c'est le seul élément on la chaine egale à NULL
+				// si c'est le seul élément de la liste, on la rend egale à NULL
 				//
 				FreePool(*A);
 				*A = NULL;
@@ -157,7 +157,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 			else
 			{ 
 				//
-				// si c'est le premier element, on rend un autre élement
+				// si c'est le premier element, on prend l'element suivant
 				//
 				FreePool(*A);
 				*A = Next;
@@ -167,7 +167,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 		else
 		{
 			//
-			// si c'est un element d'une chaine on le lidbère et on rattache la chaine
+			// si c'est un element au centre de la liste, on le libere et on rattache la chaine
 			//
 			Last->Next = Next;
 			FreePool(*A);
@@ -384,8 +384,8 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 
 		
 		//
-		// Creation de 2 evenements soit touche ou timer pour que les bullet puissent avancer sans l'appuis de touche 
-		// (pour améliorer, synchroniser les 2 pour que les balles aille exactement à la même vitesse entre un appui de touche et sans) 
+		// Creation de 2 evenements: pression du clavier ou timer. Avec cela, les Bullets peuvent avancer sans l'appuis de touche 
+		// (pour améliorer, synchroniser les 2 pour que les Bullets aillent exactement a la même vitesse entre un appui de touche et sans) 
 		//
 		Status = gBS->CreateEvent(EVT_TIMER, 0, NULL, NULL, &TimerEvent);
 		if (EFI_ERROR(Status))
