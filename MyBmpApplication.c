@@ -25,13 +25,13 @@ EFI_STATUS AddBullet(IN OUT Bullet ** A, IN UINTN x, IN UINTN y)
 	Bullet * New;
 
 	//
-	//Si la liste de Bullet est NULL
+	// If the Bullet List is NULL
 	//
 	if (A == NULL)
 		return EFI_UNSUPPORTED;
 
 	//
-	//Si le noeud est vide, on ajout un bullet a la position voulue
+	// If the node is empty, add a Bullet at the position
 	//
 	if (*A == NULL)
 	{
@@ -51,7 +51,7 @@ EFI_STATUS AddBullet(IN OUT Bullet ** A, IN UINTN x, IN UINTN y)
 	}
 	
 	//
-	//On va au noeud suivant
+	// Go to the next node
 	//
 	return AddBullet(&((*A)->Next), x, y);
 }
@@ -62,13 +62,13 @@ EFI_STATUS ShowBullet(IN OUT Bullet * BulletListe, IN EFI_GRAPHICS_OUTPUT_PROTOC
 	EFI_GRAPHICS_OUTPUT_BLT_PIXEL White = { 0xFF, 0xFF, 0xFF, 0 };
 
 	//
-	// Si la liste de Bullet est NULL
+	// If the Bullet List is NULL
 	//
 	if (BulletListe == NULL)
 		return EFI_SUCCESS;
 
 	//
-	// S'il y a un bullet, on affiche ce dernier
+	// If it exist a Bullet, display it
 	//
 	Status = GraphicsProtocol->Blt(GraphicsProtocol, &White, EfiBltVideoFill, 0, 0, BulletListe->x, BulletListe->y, 10, 10, 0);
 	if (EFI_ERROR(Status))
@@ -79,7 +79,7 @@ EFI_STATUS ShowBullet(IN OUT Bullet * BulletListe, IN EFI_GRAPHICS_OUTPUT_PROTOC
 
 	
 	//
-	// On va au noeud suivant
+	// Go to the next node
 	//
 	return ShowBullet(BulletListe->Next, GraphicsProtocol);
 }
@@ -89,14 +89,14 @@ EFI_STATUS MoveBullet(IN OUT Bullet ** A)
 	Bullet * Next;
 
 	//
-	// Si la liste est vide, il y a une erreur
+	// If the Bullet List is NULL, return an error
 	//
 	if (A == NULL)
 		return EFI_UNSUPPORTED;
 	
 	
 	//
-	// Si on arrive a la fin de la liste, on quitte
+	// If it is the end of the list, exit 
 	//
 	if (*A == NULL)
 		return EFI_SUCCESS;
@@ -104,7 +104,7 @@ EFI_STATUS MoveBullet(IN OUT Bullet ** A)
 	 Next = ((*A)->Next);
 	
 	//
-	// on avance chaque Bullet
+	// Advance each bullet
 	//
 	if (((*A)->y - 5) >= 0)
 		(*A)->y -= 5;
@@ -112,7 +112,7 @@ EFI_STATUS MoveBullet(IN OUT Bullet ** A)
 		(*A)->y = 0;
 
 	//
-	// On se rend au noeud suivant
+	// Go to the next node
 	//
 	return MoveBullet(&Next);
 }
@@ -122,14 +122,14 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 	Bullet * Next;
 
 	//
-	// Si la liste est vide, il y a une erreur
+	// If the Bullet List is NULL, return an error
 	//
 	if (A == NULL)
 		return EFI_UNSUPPORTED;
 	
 	
 	//
-	// Si on arrive a la fin de la liste, on quitte
+	// If it is the end of the list, exit 
 	//
 	if (*A == NULL)
 		return EFI_SUCCESS;
@@ -138,7 +138,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 
 	
 	//
-	//Si on doit détruire le Bullet de la liste car il sort de l'ecran
+	// If the bullet is out of the screen, destroy it
 	//
 	if ((*A)->y == 0)
 	{
@@ -148,7 +148,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 			if (Next == NULL)
 			{
 				//
-				// si c'est le seul élément de la liste, on la rend egale à NULL
+				// If it is the only element of the list, the list become NULL
 				//
 				FreePool(*A);
 				*A = NULL;
@@ -157,7 +157,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 			else
 			{ 
 				//
-				// si c'est le premier element, on prend l'element suivant
+				// if it is the first element, take the next element
 				//
 				FreePool(*A);
 				*A = Next;
@@ -167,7 +167,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 		else
 		{
 			//
-			// si c'est un element au centre de la liste, on le libere et on rattache la chaine
+			// if the element at the center of the list, free it and reattach the list
 			//
 			Last->Next = Next;
 			FreePool(*A);
@@ -176,7 +176,7 @@ EFI_STATUS DestroyEndBullet(IN OUT Bullet ** A, IN Bullet * Last)
 	}
 	else
 		//
-		// On boucle
+		// Loop
 		//
 		return DestroyEndBullet(&((*A)->Next), *A);
 }
@@ -269,7 +269,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	EFI_GUID info_type = EFI_FILE_INFO_ID;
 
 	//
-	//Recuperation du fichier
+	// File recuperation
 	//
 	Status = gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&SimpleFileSystem);
 	if (EFI_ERROR(Status))
@@ -293,7 +293,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	}
 
 	//
-	//Recuperation des informations du fichier
+	// Information file recuperation
 	//
 	Status = gBS->AllocatePool(AllocateAnyPages, infosize, (VOID **)&fileinfo);
 	if (EFI_ERROR(Status))
@@ -319,7 +319,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	}
 
 	//
-	//Recuperation du Buffer
+	// Buffer recuperation
 	//
 	Status = ReadMe->Read(ReadMe, &BufferSize, Buffer);
 	if (EFI_ERROR(Status))
@@ -329,7 +329,8 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	}
 
 	//
-	// Fin de la lecture du fichier
+	// End of file reading
+	// 
 	//
 	Status = ReadMe->Close(ReadMe);
 	if (EFI_ERROR(Status))
@@ -339,7 +340,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	}
 
 	//
-	// Conversion du BMP
+	// BMP conversion
 	//
 	Status = ConvertBmpToBlt(Buffer, BufferSize, &GopBlt, &GopBltSize, &BmpHeight, &BmpWidth);
 	if (EFI_ERROR(Status))
@@ -350,7 +351,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 
 
 	//
-	// Recuperation du protcole graphique
+	// grpahic protocol recuperation
 	//
 	Status = gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&GraphicsProtocol);
 	if (EFI_ERROR(Status))
@@ -364,7 +365,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 	do
 	{
 		//
-		// Affichage des images
+		// Image display
 		//
 		Status = GraphicsProtocol->Blt(GraphicsProtocol, &Black, EfiBltVideoFill, 0, 0, 0, 0, 800, 600, 0);
 		if (EFI_ERROR(Status))
@@ -384,8 +385,8 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 
 		
 		//
-		// Creation de 2 evenements: pression du clavier ou timer. Avec cela, les Bullets peuvent avancer sans l'appuis de touche 
-		// (pour améliorer, synchroniser les 2 pour que les Bullets aillent exactement a la même vitesse entre un appui de touche et sans) 
+		// Creation of 2 events: keyboard press or timer. With this, Bullets can advance without the touch of a button 
+		// (to improve, synchronize the 2 so that the Bullets go exactly the same speed between a key press and without) 
 		//
 		Status = gBS->CreateEvent(EVT_TIMER, 0, NULL, NULL, &TimerEvent);
 		if (EFI_ERROR(Status))
@@ -414,7 +415,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 		}
 		
 		//
-		// S'il s'agit d'un touche, on fait bouger le vaisseau
+		// If it's a key press, we move the ship
 		//
 		if (EventIndex == 0)
 		{ 
@@ -451,15 +452,23 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 
 				
 	//
-	// on fais avancer les Bullets et on détruit ceux sortant de l'ecran
+	// we advance the Bullets an	d destroy those coming out of the screen
 	//
-	MoveBullet(&BulletListe);
-	DestroyEndBullet(&BulletListe, NULL);
-
-	} while (Key.UnicodeChar != 'y');
+	Status = MoveBullet(&BulletListe);
+	if (EFI_ERROR(Status))
+	{
+		Print(L"ERROR (main): Impossible de bouger un Bullet\n");
+		return Status;
+	}
+	Status = DestroyEndBullet(&BulletListe, NULL);
+	if (EFI_ERROR(Status))
+	{
+		Print(L"ERROR (main): Impossible de detruire les bullets\n");
+		return Status;
+	}
 
 	//
-	// Liberation des elements
+	// free element
 	//
 	gBS->FreePool(fileinfo);
 	gBS->FreePool(Buffer);
