@@ -240,6 +240,7 @@ EFI_STATUS ConvertBmpToBlt(IN VOID *BmpImage, IN UINTN BmpImageSize, IN OUT VOID
 		if ((ImageIndex % 4) != 0)
 			ImageData = ImageData + (4 - (ImageIndex % 4));
 	}
+	
 	return EFI_SUCCESS;
 }
 
@@ -449,7 +450,9 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 				break;
 			}
 		}
-
+	MoveBullet(&BulletListe);
+	DestroyEndBullet(&BulletListe, NULL);
+	} while (Key.UnicodeChar != 'y');
 				
 	//
 	// we advance the Bullets an	d destroy those coming out of the screen
